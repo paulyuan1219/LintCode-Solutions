@@ -129,19 +129,55 @@ class Solution:
             return self.helper(nums, start + 1, end, lower_bound, nums[start])
         
         return self.helper(nums, start + 1, index - 1, lower_bound, nums[start]) and self.helper(nums, index, end, nums[start], upper_bound)
+```
 
+
+## 2022-08-31
+首先参考了下面的笔记，感觉懂了 https://www.cnblogs.com/grandyang/p/5327635.html
+
+其先序遍历的结果是 {5, 2, 1, 3, 6}，先设一个最小值 low，然后遍历数组，如果当前值小于这个最小值 low，返回 false，对于根节点，将其压入栈中，然后往后遍历，如果遇到的数字比栈顶元素小，说明是其左子树的点，继续压入栈中，直到遇到的数字比栈顶元素大，那么就是右边的值了，需要找到是哪个节点的右子树，所以更新 low 值并删掉栈顶元素，然后继续和下一个栈顶元素比较，如果还是大于，则继续更新 low 值和删掉栈顶，直到栈为空或者当前栈顶元素大于当前值停止，压入当前值，这样如果遍历完整个数组之前都没有返回 false 的话，最后返回 true 即可，
+
+但是写出来的代码有错。
+
+```python
+class Solution:
+    # @param {integer[]} preorder
+    # @return {boolean}
+    def verifyPreorder(self, preorder):
+        if not preorder:
+            return True 
+        
+        if len(preorder) <= 2:
+            return True
+
+        low = float('-inf')
+        stack = [preorder[0]]
+
+        for i in range(1, len(preorder)):
+            if not stack or preorder[i] < stack[-1]:
+                stack.append(preorder[i])
+                continue
+            
+            if preorder[i] <= low:
+                return False
+            while len(stack) > 0 and stack[-1] < preorder[i]:
+                low = stack[-1]
+                stack.pop()
+
+        return True
+        
 ```
 ```bash
 Wrong Answer
-57%
-1211 ms
+64%
+102 ms
 时间消耗
 ·
-20.26 MB
+6.68 MB
 空间消耗
 ·
 输入数据
-[4,3,5,1,2,3]
+[10,7,4,8,6,40,23]
 输出数据
 true
 期望答案
@@ -365,6 +401,117 @@ class Solution:
 
 ```
 
+好吧，还是上面的代码，把几个语句顺序改一下，就对了，说明刚刚的解答还是没有完全看懂 哈哈
+
+```python
+class Solution:
+    # @param {integer[]} preorder
+    # @return {boolean}
+    def verifyPreorder(self, preorder):
+        if not preorder:
+            return True 
+        
+        if len(preorder) <= 2:
+            return True
+
+        low = float('-inf')
+        stack = [preorder[0]]
+
+        for i in range(1, len(preorder)):
+            if preorder[i] <= low:
+                return False
+
+            while len(stack) > 0 and stack[-1] < preorder[i]:
+                low = stack[-1]
+                stack.pop()
+
+            if not stack or preorder[i] < stack[-1]:
+                stack.append(preorder[i])
+                continue
+            
+
+        return True
+```
+
+现在感觉理解了，但是这个是单调栈的解法，正常情况是想不到的。。。
+
+下面这种方法使用了分治法，跟之前那道验证二叉搜索树的题 Validate Binary Search Tree 的思路很类似，在递归函数中维护一个下界 lower 和上界 upper，那么当前遍历到的节点值必须在 (lower, upper) 区间之内，然后在给定的区间内搜第一个大于当前节点值的点，以此为分界，左右两部分分别调用递归函数，注意左半部分的 upper 更新为当前节点值 val，表明左子树的节点值都必须小于当前节点值，而右半部分的递归的 lower 更新为当前节点值 val，表明右子树的节点值都必须大于当前节点值，如果左右两部分的返回结果均为真，则整体返回真，参见代码如下
+
+```c++
+class Solution {
+public:
+    /**
+     * @param preorder: List[int]
+     * @return: return a boolean
+     */
+    bool verifyPreorder(vector<int>& preorder) {
+        return helper(preorder, 0, preorder.size() - 1, INT_MIN, INT_MAX);
+    }
+    bool helper(vector<int>& preorder, int start, int end, int lower, int upper) {
+        if (start > end) return true;
+        int val = preorder[start], i = 0;
+        if (val <= lower || val >= upper) return false;
+        for (i = start + 1; i <= end; ++i) {
+            if (preorder[i] >= val) break;
+        }
+        return helper(preorder, start + 1, i - 1, lower, val) && helper(preorder, i, end, val, upper);
+    }
+};
+```
+
+一样的代码，我写成python看看行不行, it does not pass
+```python
+class Solution:
+    # @param {integer[]} preorder
+    # @return {boolean}
+    def verifyPreorder(self, preorder):
+        if not preorder:
+            return True 
+        
+        if len(preorder) <= 2:
+            return True
+
+        return self.helper(preorder, 0, len(preorder) - 1, float('-inf'), float('inf'))
+
+
+    def helper(self, preorder, start, end, lower_bound, upper_bound):
+        if start >= end: # it should be start > end
+            return True 
+        
+        pivot = preorder[start]
+
+        if pivot <= lower_bound or pivot >= upper_bound:
+            return False
+        
+        i = start + 1
+        while i <= end:
+            if preorder[i] > pivot:
+                break 
+            i += 1
+        
+        return self.helper(preorder, start + 1, i - 1, lower_bound, pivot) and self.helper(preorder, i, end, pivot, upper_bound)
+    
+
+```
+```bash
+Wrong Answer
+64%
+1114 ms
+时间消耗
+·
+13.83 MB
+空间消耗
+·
+输入数据
+[10,7,4,8,6,40,23]
+输出数据
+true
+期望答案
+false
+```
+
++ 好吧，对照了一下，就是递归的出口的一个判断错了，应该改成`start > end`
++ 改了以后，会超时，这个就是python本身的问题了，呵呵
 
 # 1311 · 二叉搜索树的最近公共祖先
 算法
