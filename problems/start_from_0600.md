@@ -1,3 +1,117 @@
+# 627 · 最长回文串
+算法
+简单
+通过率
+45%
+题目
+题解
+笔记
+讨论
+排名
+记录
+描述
+给出一个包含大小写字母的字符串。求出由这些字母构成的最长的回文串的长度是多少。
+
+数据是大小写敏感的，也就是说，"Aa" 并不会被认为是一个回文串。
+
+背完这套刷题模板，真的不一样！
+
+北大学霸令狐冲15年刷题经验总结的《算法小抄模板Cheat Sheet》助你上岸！
+
+微信添加【jiuzhang0607】备注【小抄】领取
+
+
+假设字符串的长度不会超过 100000。
+
+样例
+样例 1:
+
+输入 : s = "abccccdd"
+输出 : 7
+说明 : 
+一种可以构建出来的最长回文串方案是 "dccaccd"。
+标签
+企业
+
+## 2022-08-31
+java practice
+
+```java
+import java.util.*;
+import java.util.Hashtable;
+
+
+public class Solution {
+    /**
+     * @param s: a string which consists of lowercase or uppercase letters
+     * @return: the length of the longest palindromes that can be built
+     */
+    public int longestPalindrome(String s) {
+        // write your code here
+
+        if (s == null){
+            return 0;
+        }
+
+        if (s.length() <= 1){
+            return s.length();
+        }
+
+        HashTable ht = HashTable();
+
+        for(int i = 0; i < s.length(); i ++){
+            char c = s.charAt(i);
+            if (ht.containsKey(c)){
+                ht.put(c, ht.get(c) + 1);
+            } else{
+                ht.put(c, 1);
+            }
+        }
+
+        int ans = 0;
+        boolean is_odd_met = false;
+
+        Enumeration ks = ht.keys();
+        while(ks.hasMoreElements()){
+            char k = (char) ks.nextElement();
+            int freq = ht.get(k);
+
+            if (freq % 2 == 0){
+                ans += freq;
+                continue;
+            }
+
+            if (!is_odd_met){
+                ans += freq;
+                is_odd_met = true;
+                continue;
+            }
+
+            ans += (freq - 1);
+        }
+
+        return ans;
+    }
+}
+
+
+```
+```bash
+Compile Error
+异常信息
+/code/Solution.java:21: error: cannot find symbol
+        HashTable ht = HashTable();
+        ^
+  symbol:   class HashTable
+  location: class Solution
+/code/Solution.java:21: error: cannot find symbol
+        HashTable ht = HashTable();
+                       ^
+  symbol:   method HashTable()
+  location: cl
+```
+
+
 # 633 · 寻找重复的数
 算法
 困难
